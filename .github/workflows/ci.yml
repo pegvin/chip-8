@@ -1,0 +1,161 @@
+name: ci
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  linux-x86_64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+        - { name: "GCC", cc: gcc }
+        - { name: "Clang", cc: clang }
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Build & Install SDL2
+      run: bash ./tools/BuildNInstall_Linux.sh
+
+    - name: Build & Strip (Static Linking=False;)
+      run: |
+        make all -j4 BUILD_TARGET=release CC=${{ matrix.config.cc }}
+        strip ./chip-8
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      if: ${{ matrix.config.cc == 'clang' }}
+      with:
+        name: linux-x86_64-${{ matrix.config.cc }}
+        path: ./chip-8
+        if-no-files-found: error
+
+  linux-i686:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Build (Setup Ubuntu 18.04 x86) (Build & Install SDL2) (Compiler = Clang;)
+      uses: paulproteus/ubuntu-18.04-x86@0.1
+      with:
+        command: |
+          echo "::group::Update System Repositories & Install pkg-config, git, libgtk-3-dev, clang-10"
+          apt-get update -y
+          apt-get install -y pkg-config git libgtk-3-dev zlib1g zlib1g-dev clang-10
+          echo "::endgroup::"
+          echo "::group::Build & Install SDL2"
+          bash ./tools/BuildNInstall_Linux.sh
+          echo "::endgroup::"
+          echo "::group::Build Csprite"
+          make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=1 CC=clang-10
+          echo "::endgroup::"
+
+    - name: Exit if file not exists
+      run: |
+        if [ ! -e ./chip-8 ]; then
+            echo "'chip-8' executable not found"
+            exit 1
+        fi
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-i686-clang10
+        path: ./chip-8
+        if-no-files-found: error
+
+  windows-x86_64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          update: false
+          install: |
+            make git
+            mingw-w64-x86_64-binutils mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
+
+      - name: Build & Install SDL2
+        run: |
+          export CC=gcc
+          export CXX=g++
+          bash ./tools/BuildNInstall_Windows.sh mingw64
+
+      - name: Build
+        run: make all -j4 BUILD_TARGET=release CC=gcc
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: win-x86_64
+          path: chip-8.exe
+          if-no-files-found: error
+
+  windows-i686:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw32
+          update: false
+          install: |
+            make git
+            mingw-w64-i686-binutils mingw-w64-i686-gcc mingw-w64-i686-cmake
+
+      - name: Build & Install SDL2
+        run: |
+          export CC=gcc
+          export CXX=g++
+          bash ./tools/BuildNInstall_Windows.sh mingw32
+
+      - name: Build
+        run: make all -j4 BUILD_TARGET=release CC=gcc
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: win-i686
+          path: chip-8.exe
+          if-no-files-found: error
+
+  osx_x86_64:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install dylibbundler, SDL2
+      run: |
+        brew install dylibbundler sdl2
+
+    - name: Build
+      run: make all -j4 BUILD_TARGET=release
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: osx_executable
+        path: ./chip-8
+        if-no-files-found: error
+
+
