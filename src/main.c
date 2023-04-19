@@ -1,67 +1,63 @@
+#include <stdint.h>
 #include <stdbool.h>
-#include <SDL2/SDL.h>
-#include "front.h"
+#include "win.h"
+#include "system.h"
 
 bool isRunning = true;
-float Scale_X = 1.0f;
-float Scale_Y = 1.0f;
-float FontScale = 1.0f;
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-nkctx_t* nkCtx = NULL;
-
 void ProcessEvents();
 
 int main(void) {
-	if (InitChip8Front(&window, &renderer, &Scale_X, &Scale_Y, &FontScale, &nkCtx) != 0) {
-		return 1;
+	if (InitWindow() != 0) return 1;
+
+	{
+		// 1-bit palette: lospec.com/palette-list/1bit-monitor-glow
+		uint8_t on_color[3] = { 0xf0, 0xf6, 0xf0 };
+		uint8_t off_color[3] = { 0x22, 0x23, 0x23 };
+		SetDisplayTheme(on_color, off_color);
 	}
+
+	chip8 sys;
+	sys_init(&sys);
+
+	UpdateWindowPixels(sys.display, NULL);
 
 	while (isRunning) {
-		Chip8Front_NewFrame();
-		ProcessEvents();
-
-		if (nk_begin(nkCtx, "Demo", nk_rect(50, 50, 230, 250), NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
-			enum { EASY, HARD };
-			static int op = EASY;
-			static int property = 20;
-
-			nk_layout_row_static(nkCtx, 30, 80, 1);
-			if (nk_button_label(nkCtx, "button"))
-				fprintf(stdout, "button pressed\n");
-			nk_layout_row_dynamic(nkCtx, 30, 2);
-			if (nk_option_label(nkCtx, "easy", op == EASY)) op = EASY;
-			if (nk_option_label(nkCtx, "hard", op == HARD)) op = HARD;
-			nk_layout_row_dynamic(nkCtx, 25, 1);
-			nk_property_int(nkCtx, "Compression:", 0, &property, 100, 10, 1);
-		}
-		nk_end(nkCtx);
-		Chip8Front_RenderToScreen(renderer);
-	}
-
-	QuitChip8Front(window, renderer, nkCtx);
-	nkCtx = NULL;
-	renderer = NULL;
-	window = NULL;
-	return 0;
-}
-
-void ProcessEvents() {
-	SDL_Event e;
-	nk_input_begin(nkCtx);
-	while (SDL_PollEvent(&e)) {
-		nk_sdl_handle_event(&e);
-		switch (e.type) {
-			case SDL_QUIT:
-				isRunning = false;
-				break;
-			case SDL_WINDOWEVENT:
-				if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
-					isRunning = false;
+		SDL_Event e;
+		while (SDL_PollEvent(&e)) {
+			switch (e.type) {
+				case SDL_QUIT: isRunning = false; break;
+				case SDL_WINDOWEVENT:
+					if (e.window.event == SDL_WINDOWEVENT_CLOSE) isRunning = false;
+					break;
+				case SDL_KEYUP:
+				case SDL_KEYDOWN: {
+					switch(e.key.keysym.sym) {
+						case SDLK_1: { sys_setkeydown(&sys, 0x1, e.type == SDL_KEYDOWN); break; }
+						case SDLK_2: { sys_setkeydown(&sys, 0x2, e.type == SDL_KEYDOWN); break; }
+						case SDLK_3: { sys_setkeydown(&sys, 0x3, e.type == SDL_KEYDOWN); break; }
+						case SDLK_4: { sys_setkeydown(&sys, 0x4, e.type == SDL_KEYDOWN); break; }
+						case SDLK_5: { sys_setkeydown(&sys, 0x5, e.type == SDL_KEYDOWN); break; }
+						case SDLK_6: { sys_setkeydown(&sys, 0x6, e.type == SDL_KEYDOWN); break; }
+						case SDLK_7: { sys_setkeydown(&sys, 0x7, e.type == SDL_KEYDOWN); break; }
+						case SDLK_8: { sys_setkeydown(&sys, 0x8, e.type == SDL_KEYDOWN); break; }
+						case SDLK_9: { sys_setkeydown(&sys, 0x9, e.type == SDL_KEYDOWN); break; }
+						case SDLK_0: { sys_setkeydown(&sys, 0x0, e.type == SDL_KEYDOWN); break; }
+						case SDLK_q: { sys_setkeydown(&sys, 0xA, e.type == SDL_KEYDOWN); break; }
+						case SDLK_w: { sys_setkeydown(&sys, 0xB, e.type == SDL_KEYDOWN); break; }
+						case SDLK_e: { sys_setkeydown(&sys, 0xC, e.type == SDL_KEYDOWN); break; }
+						case SDLK_r: { sys_setkeydown(&sys, 0xD, e.type == SDL_KEYDOWN); break; }
+						case SDLK_t: { sys_setkeydown(&sys, 0xE, e.type == SDL_KEYDOWN); break; }
+						case SDLK_y: { sys_setkeydown(&sys, 0xF, e.type == SDL_KEYDOWN); break; }
+					}
+					break;
 				}
-				break;
+			}
 		}
+
+		sys_cycle(&sys);
 	}
-	nk_input_end(nkCtx);
+
+	CloseWindow();
+	return 0;
 }
 
