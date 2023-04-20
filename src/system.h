@@ -7,12 +7,18 @@
 
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
+
 #define SPRITE_WIDTH 8
 #define FONTSET_SIZE 80
+
+#define NUM_OF_KEYS 16
 #define NUM_OF_REGISTERS 16
-#define MEMORY_SIZE 4096
-#define MEMORY_SIZE_AVAILABLE 4096 - 0x200
 #define STACK_SIZE 16
+
+#define ROM_START 0x200
+#define MEMORY_SIZE 4096
+#define MEMORY_SIZE_AVAILABLE MEMORY_SIZE - ROM_START
+#define FONTSET_ADDR 0x0
 
 typedef struct {
 	uint16_t opcode;
@@ -21,10 +27,10 @@ typedef struct {
 	uint16_t I;
 	uint16_t pctr;
 	uint16_t stack[STACK_SIZE];
-	uint16_t sptr;
-	uint8_t  delayTimer;
-	uint8_t  soundTimer;
-	uint8_t  key;
+	uint8_t  sptr;
+	uint8_t  dt;  // delay timer
+	uint8_t  st;  // sound timer
+	uint8_t  key; // key being held down
 	uint8_t  display[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 } chip8;
 
