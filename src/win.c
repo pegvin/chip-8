@@ -63,11 +63,11 @@ void UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT], SDL_Rect
 	SDL_LockSurface(emuDisplaySurf);
 	for (uint16_t y = dirtyArea.y; y < dirtyArea.h; ++y) {
 		for (uint16_t x = dirtyArea.x; x < dirtyArea.w; ++x) {
-			if (pixels[y * DISPLAY_WIDTH + x] != 0) {
-				memcpy(emuDisplaySurf->pixels + ((y * DISPLAY_WIDTH + x) * 3), ON_Color, 3);
-			} else {
-				memcpy(emuDisplaySurf->pixels + ((y * DISPLAY_WIDTH + x) * 3), OFF_Color, 3);
-			}
+			memcpy(
+				emuDisplaySurf->pixels + ((y * DISPLAY_WIDTH + x) * 3),
+				pixels[y * DISPLAY_WIDTH + x] != 0 ? ON_Color : OFF_Color,
+				3
+			);
 		}
 	}
 	SDL_UnlockSurface(emuDisplaySurf);
