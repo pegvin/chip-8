@@ -1,8 +1,6 @@
 #include "win.h"
 #include "log.h"
 
-#define EMU_DISPLAY_SCALE 6
-
 static SDL_Window* window = NULL;
 
 static SDL_Surface* emuDisplaySurf = NULL;
@@ -25,11 +23,11 @@ int InitWindow() {
 
 	SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, 0);
 
-	emuDisplaySurf = SDL_CreateRGBSurfaceWithFormat(0, 64, 32, 8 * 3, SDL_PIXELFORMAT_RGB24);
+	emuDisplaySurf = SDL_CreateRGBSurfaceWithFormat(0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 8 * 3, SDL_PIXELFORMAT_RGB24);
 
 	window = SDL_CreateWindow(
 		"Chip-8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		64 * EMU_DISPLAY_SCALE, 32 * EMU_DISPLAY_SCALE, SDL_WINDOW_HIDDEN
+		DISPLAY_WIDTH * EMU_DISPLAY_SCALE, DISPLAY_HEIGHT * EMU_DISPLAY_SCALE, SDL_WINDOW_HIDDEN
 	);
 
 	if (window == NULL) {
@@ -47,8 +45,8 @@ void CloseWindow() {
 	SDL_Quit();
 }
 
-void UpdateWindowPixels(uint8_t pixels[64 * 32], SDL_Rect* _dirtyArea) {
-	SDL_Rect dirtyArea = { 0, 0, 64, 32 };
+void UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT], SDL_Rect* _dirtyArea) {
+	SDL_Rect dirtyArea = { 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT };
 	if (_dirtyArea != NULL) {
 		dirtyArea.x = _dirtyArea->x;
 		dirtyArea.y = _dirtyArea->y;
@@ -65,10 +63,10 @@ void UpdateWindowPixels(uint8_t pixels[64 * 32], SDL_Rect* _dirtyArea) {
 	SDL_LockSurface(emuDisplaySurf);
 	for (uint16_t y = dirtyArea.y; y < dirtyArea.h; ++y) {
 		for (uint16_t x = dirtyArea.x; x < dirtyArea.w; ++x) {
-			if (pixels[y * 64 + x] != 0) {
-				memcpy(emuDisplaySurf->pixels + ((y * 64 + x) * 3), ON_Color, 3);
+			if (pixels[y * DISPLAY_WIDTH + x] != 0) {
+				memcpy(emuDisplaySurf->pixels + ((y * DISPLAY_WIDTH + x) * 3), ON_Color, 3);
 			} else {
-				memcpy(emuDisplaySurf->pixels + ((y * 64 + x) * 3), OFF_Color, 3);
+				memcpy(emuDisplaySurf->pixels + ((y * DISPLAY_WIDTH + x) * 3), OFF_Color, 3);
 			}
 		}
 	}

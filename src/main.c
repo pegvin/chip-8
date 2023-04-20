@@ -4,7 +4,6 @@
 #include "system.h"
 
 bool isRunning = true;
-void ProcessEvents();
 
 int main(int argc, char** argv) {
 	if (argc < 2) {
@@ -28,6 +27,8 @@ int main(int argc, char** argv) {
 	UpdateWindowPixels(sys.display, NULL);
 
 	while (isRunning) {
+		sys_cycle(&sys);
+
 		SDL_Event e;
 		while (SDL_PollEvent(&e)) {
 			switch (e.type) {
@@ -63,8 +64,8 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		sys_cycle(&sys);
 		UpdateWindowPixels(sys.display, NULL);
+		SDL_Delay(1000/500);
 	}
 
 	CloseWindow();

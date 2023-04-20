@@ -4,6 +4,10 @@
 #include <SDL2/SDL.h>
 #include <stdint.h>
 
+#include "system.h"
+
+#define EMU_DISPLAY_SCALE 8
+
 int  InitWindow(); // creates a window with 64x32 scaled 6x
 void CloseWindow(); // destroys all the memory allocated to create & used by window
 
@@ -16,7 +20,7 @@ void CloseWindow(); // destroys all the memory allocated to create & used by win
 	the changed part is updated, which is more efficient.
 	leave it to NULL to update whole display.
 */
-void UpdateWindowPixels(uint8_t pixels[64 * 32], SDL_Rect* dirtyArea);
+void UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT], SDL_Rect* dirtyArea);
 
 // Set Display Color Of Our Monochrome Display, Either Or All Values Can be Set To NULL
 void SetDisplayTheme(uint8_t on_color[3], uint8_t off_color[3]);
