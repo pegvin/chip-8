@@ -232,10 +232,9 @@ void sys_cycle(chip8* s) {
 				for (uint16_t x = 0; x < SPRITE_WIDTH; ++x) {
 					bool isPixelOn = (spriteByte & (0x80 >> x)) != 0;
 					if (isPixelOn) {
-						uint8_t pX = xPos + x;
-						uint8_t pY = yPos + y;
-
-						uint8_t idx = pY * DISPLAY_WIDTH + pX;
+						uint16_t pX = xPos + x;
+						uint16_t pY = yPos + y;
+						uint32_t idx = pY * DISPLAY_WIDTH + pX;
 
 						if (s->display[idx] == 1) s->registers[0xF] = 1;
 						s->display[idx] ^= 1;
