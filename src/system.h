@@ -32,17 +32,24 @@ typedef struct {
 	uint8_t  st;  // sound timer
 	bool     keys[NUM_OF_KEYS]; // key being held down
 	uint8_t  display[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+
+	// MISC - stuff not related to actual emulation.
+	uint8_t  displayRGB[DISPLAY_WIDTH * DISPLAY_HEIGHT * 3]; // same as display[] but with RGB8 colors
+	uint8_t  pixelOn[3];  // Color to use when display pixel is on
+	uint8_t  pixelOff[3]; // Color to use when display pixel is off
 } chip8;
 
-void sys_init(chip8* sys);
+void sys_init(chip8* sys, uint8_t displayColorOn[3], uint8_t displayColorOff[3]);
 void sys_load_rom(chip8* s, const char* romPath);
 void sys_pctr_increment(chip8* sys);
 void sys_cycle(chip8* s);
 void sys_setkeydown(chip8* s, uint8_t key, bool isDown);
 
-// Misc
-void sys_SetDisplayTheme(chip8* s, uint8_t on_color[3], uint8_t off_color[3]);
+// sets all the pixels to OFF.
+void sys_ResetDisplay(chip8* s);
 
+// changes chip8.pixelOn & chip8.pixelOff colors and updates them in displayRGB.
+void sys_SetDisplayTheme(chip8* s, uint8_t on_color[3], uint8_t off_color[3]);
 
 #endif // _CHIP8_SYSTEM_H_INCLUDED
 

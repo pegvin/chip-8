@@ -22,8 +22,5 @@ void CloseWindow(); // destroys all the memory allocated to create & used by win
 */
 void UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT * 3]);
 
-// Set Display Color Of Our Monochrome Display, Either Or All Values Can be Set To NULL
-void SetDisplayTheme(uint8_t on_color[3], uint8_t off_color[3]);
-
 #endif // _CHIP8_WINDOW_H_INCLUDED
 

@@ -19,15 +19,12 @@ int main(int argc, char** argv) {
 
 	if (InitWindow() != 0) return 1;
 
-	{
-		// 1-bit palette: lospec.com/palette-list/1bit-monitor-glow
-		uint8_t on_color[3] = { 0xf0, 0xf6, 0xf0 };
-		uint8_t off_color[3] = { 0x22, 0x23, 0x23 };
-		SetDisplayTheme(on_color, off_color);
-	}
-
 	chip8 sys;
-	sys_init(&sys);
+
+	// 1-bit palette: lospec.com/palette-list/1bit-monitor-glow
+	uint8_t on_color[3] = { 0xf0, 0xf6, 0xf0 };
+	uint8_t off_color[3] = { 0x22, 0x23, 0x23 };
+	sys_init(&sys, on_color, off_color);
 	sys_load_rom(&sys, argv[1]);
 
 	unsigned int clockStart, clockEnd;
@@ -83,7 +80,6 @@ int main(int argc, char** argv) {
 		}
 
 		sys_cycle(&sys);
-		UpdateWindowPixels(sys.display);
 
 		clockEnd = SDL_GetTicks() - clockStart;
 		if (clockFreq > clockEnd) SDL_Delay(clockFreq - clockEnd);

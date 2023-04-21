@@ -25,19 +25,23 @@ static const uint8_t fontset[FONTSET_SIZE] = {
 	0xF0, 0x80, 0xF0, 0x80, 0x80		 // F
 };
 
-void sys_init(chip8* sys) {
-	memset(sys->ram, 0, MEMORY_SIZE);
-	memcpy(sys->ram + FONTSET_ADDR, fontset, FONTSET_SIZE);
-	memset(sys->registers, 0, NUM_OF_REGISTERS * sizeof(sys->registers[0]));
-	memset(sys->stack, 0, STACK_SIZE * sizeof(sys->stack[0]));
-	memset(sys->display, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
-	memset(sys->keys, 0, NUM_OF_KEYS * sizeof(bool));
+void sys_init(chip8* sys, uint8_t displayColorOn[3], uint8_t displayColorOff[3]) {
 	sys->pctr = ROM_START;
 	sys->opcode = 0;
 	sys->I = 0;
 	sys->sptr = 0;
 	sys->dt = 0;
 	sys->st = 0;
+
+	memset(sys->ram, 0, MEMORY_SIZE);
+	memcpy(sys->ram + FONTSET_ADDR, fontset, FONTSET_SIZE);
+	memset(sys->registers, 0, NUM_OF_REGISTERS * sizeof(sys->registers[0]));
+	memset(sys->stack, 0, STACK_SIZE * sizeof(sys->stack[0]));
+	memset(sys->display, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
+	memset(sys->keys, 0, NUM_OF_KEYS * sizeof(bool));
+	memcpy(sys->pixelOn, displayColorOn, 3);
+	memcpy(sys->pixelOff, displayColorOff, 3);
+	sys_ResetDisplay(sys);
 }
 
 void sys_load_rom(chip8* s, const char* romPath) {
@@ -66,6 +70,33 @@ void sys_pctr_increment(chip8* sys) {
 
 void sys_setkeydown(chip8* s, uint8_t key, bool isDown) {
 	s->keys[key] = isDown;
+}
+
+void sys_ResetDisplay(chip8* s) {
+	memset(s->display, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
+	for (uint16_t y = 0; y < DISPLAY_HEIGHT; ++y) {
+		for (uint16_t x = 0; x < DISPLAY_WIDTH; ++x) {
+			memcpy(
+				s->displayRGB + (((y * DISPLAY_WIDTH) + x) * 3),
+				s->pixelOff,
+				3
+			);
+		}
+	}
+	UpdateWindowPixels(s->displayRGB);
+}
+
+void sys_SetDisplayTheme(chip8* s, uint8_t on_color[3], uint8_t off_color[3]) {
+	for (uint16_t y = 0; y < DISPLAY_HEIGHT; ++y) {
+		for (uint16_t x = 0; x < DISPLAY_WIDTH; ++x) {
+			memcpy(
+				s->displayRGB + (((y * DISPLAY_WIDTH) + x) * 3),
+				s->display[(y * DISPLAY_WIDTH) + x] ? s->pixelOn : s->pixelOff,
+				3
+			);
+		}
+	}
+	UpdateWindowPixels(s->displayRGB);
 }
 
 void sys_printstate(chip8* s) {
@@ -97,7 +128,7 @@ void sys_cycle(chip8* s) {
 	switch (identifier) {
 		case 0x0: {
 			if (s->opcode == 0x00E0) { // Clear: Clear The Display
-				memset(s->display, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
+				sys_ResetDisplay(s);
 			} else if (s->opcode == 0x00EE) { // Return from a subroutine: The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
 				if (s->sptr > 0) s->sptr--;
 				s->pctr = s->stack[s->sptr];
@@ -248,9 +279,15 @@ void sys_cycle(chip8* s) {
 						if (s->display[idx] == 1) {
 							s->registers[0xF] = 1;
 						}
+
 						s->display[idx] ^= 1;
+						memcpy(
+							s->displayRGB + (idx * 3),
+							s->display[idx] ? s->pixelOn : s->pixelOff, 3
+						);
 					}
 				}
+				UpdateWindowPixels(s->displayRGB);
 			}
 			break;
 		}
