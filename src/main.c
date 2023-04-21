@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "win.h"
+#include "log.h"
 #include "system.h"
 
 bool isRunning = true;
@@ -28,7 +29,7 @@ int main(int argc, char** argv) {
 	sys_load_rom(&sys, argv[1]);
 
 	unsigned int clockStart, clockEnd;
-	unsigned int clockFreq = 1000 / 700; // 700 MHz
+	unsigned int clockFreq = 1000 / 700; // 700Hz
 
 	while (isRunning) {
 		clockStart = SDL_GetTicks();
@@ -80,6 +81,7 @@ int main(int argc, char** argv) {
 		}
 
 		sys_cycle(&sys);
+		UpdateWindowPixels(sys.displayRGB);
 
 		clockEnd = SDL_GetTicks() - clockStart;
 		if (clockFreq > clockEnd) SDL_Delay(clockFreq - clockEnd);

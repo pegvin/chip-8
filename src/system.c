@@ -83,7 +83,6 @@ void sys_ResetDisplay(chip8* s) {
 			);
 		}
 	}
-	UpdateWindowPixels(s->displayRGB);
 }
 
 void sys_SetDisplayTheme(chip8* s, uint8_t on_color[3], uint8_t off_color[3]) {
@@ -96,7 +95,6 @@ void sys_SetDisplayTheme(chip8* s, uint8_t on_color[3], uint8_t off_color[3]) {
 			);
 		}
 	}
-	UpdateWindowPixels(s->displayRGB);
 }
 
 void sys_printstate(chip8* s) {
@@ -287,7 +285,6 @@ void sys_cycle(chip8* s) {
 						);
 					}
 				}
-				UpdateWindowPixels(s->displayRGB);
 			}
 			break;
 		}
