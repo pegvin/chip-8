@@ -1,3 +1,9 @@
+/* INFO:
+	- "Display wait" doesn't work:
+		Drawing sprites to the display waits for the vertical blank interrupt,
+		limiting their speed to max 60 sprites per second, but i don't think i'll implement it.
+*/
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "win.h"
@@ -24,15 +30,11 @@ int main(int argc, char** argv) {
 	sys_init(&sys);
 	sys_load_rom(&sys, argv[1]);
 
-	UpdateWindowPixels(sys.display, NULL);
-
 	unsigned int clockStart, clockEnd;
 	unsigned int clockFreq = 1000 / 700; // 700 MHz
 
 	while (isRunning) {
 		clockStart = SDL_GetTicks();
-
-		sys_cycle(&sys);
 
 		SDL_Event e;
 		while (SDL_PollEvent(&e)) {
@@ -42,34 +44,46 @@ int main(int argc, char** argv) {
 					if (e.window.event == SDL_WINDOWEVENT_CLOSE) isRunning = false;
 					break;
 				case SDL_KEYUP:
-					default:
-						sys_setkeydown(&sys, 0x0);
-						break;
 				case SDL_KEYDOWN: {
+					/*      CHIP-8 KEYMAP
+						Keypad       Keyboard
+						+-+-+-+-+    +-+-+-+-+
+						|1|2|3|C|    |1|2|3|4|
+						+-+-+-+-+    +-+-+-+-+
+						|4|5|6|D|    |Q|W|E|R|
+						+-+-+-+-+ => +-+-+-+-+
+						|7|8|9|E|    |A|S|D|F|
+						+-+-+-+-+    +-+-+-+-+
+						|A|0|B|F|    |Z|X|C|V|
+						+-+-+-+-+    +-+-+-+-+ */
 					switch(e.key.keysym.sym) {
-						case SDLK_0: { sys_setkeydown(&sys, 0x0); break; }
-						case SDLK_1: { sys_setkeydown(&sys, 0x1); break; }
-						case SDLK_2: { sys_setkeydown(&sys, 0x2); break; }
-						case SDLK_3: { sys_setkeydown(&sys, 0x3); break; }
-						case SDLK_4: { sys_setkeydown(&sys, 0x4); break; }
-						case SDLK_5: { sys_setkeydown(&sys, 0x5); break; }
-						case SDLK_6: { sys_setkeydown(&sys, 0x6); break; }
-						case SDLK_7: { sys_setkeydown(&sys, 0x7); break; }
-						case SDLK_8: { sys_setkeydown(&sys, 0x8); break; }
-						case SDLK_9: { sys_setkeydown(&sys, 0x9); break; }
-						case SDLK_q: { sys_setkeydown(&sys, 0xA); break; }
-						case SDLK_w: { sys_setkeydown(&sys, 0xB); break; }
-						case SDLK_e: { sys_setkeydown(&sys, 0xC); break; }
-						case SDLK_r: { sys_setkeydown(&sys, 0xD); break; }
-						case SDLK_t: { sys_setkeydown(&sys, 0xE); break; }
-						case SDLK_y: { sys_setkeydown(&sys, 0xF); break; }
+						case SDLK_1: { sys_setkeydown(&sys, 0x1, e.type == SDL_KEYDOWN); break; }
+						case SDLK_2: { sys_setkeydown(&sys, 0x2, e.type == SDL_KEYDOWN); break; }
+						case SDLK_3: { sys_setkeydown(&sys, 0x3, e.type == SDL_KEYDOWN); break; }
+						case SDLK_4: { sys_setkeydown(&sys, 0xC, e.type == SDL_KEYDOWN); break; }
+
+						case SDLK_q: { sys_setkeydown(&sys, 0x4, e.type == SDL_KEYDOWN); break; }
+						case SDLK_w: { sys_setkeydown(&sys, 0x5, e.type == SDL_KEYDOWN); break; }
+						case SDLK_e: { sys_setkeydown(&sys, 0x6, e.type == SDL_KEYDOWN); break; }
+						case SDLK_r: { sys_setkeydown(&sys, 0xD, e.type == SDL_KEYDOWN); break; }
+
+						case SDLK_a: { sys_setkeydown(&sys, 0x7, e.type == SDL_KEYDOWN); break; }
+						case SDLK_s: { sys_setkeydown(&sys, 0x8, e.type == SDL_KEYDOWN); break; }
+						case SDLK_d: { sys_setkeydown(&sys, 0x9, e.type == SDL_KEYDOWN); break; }
+						case SDLK_f: { sys_setkeydown(&sys, 0xE, e.type == SDL_KEYDOWN); break; }
+
+						case SDLK_z: { sys_setkeydown(&sys, 0xA, e.type == SDL_KEYDOWN); break; }
+						case SDLK_x: { sys_setkeydown(&sys, 0x0, e.type == SDL_KEYDOWN); break; }
+						case SDLK_c: { sys_setkeydown(&sys, 0xB, e.type == SDL_KEYDOWN); break; }
+						case SDLK_v: { sys_setkeydown(&sys, 0xF, e.type == SDL_KEYDOWN); break; }
 					}
 					break;
 				}
 			}
 		}
 
-		UpdateWindowPixels(sys.display, NULL);
+		sys_cycle(&sys);
+		UpdateWindowPixels(sys.display);
 
 		clockEnd = SDL_GetTicks() - clockStart;
 		if (clockFreq > clockEnd) SDL_Delay(clockFreq - clockEnd);

@@ -30,7 +30,7 @@ typedef struct {
 	uint8_t  sptr;
 	uint8_t  dt;  // delay timer
 	uint8_t  st;  // sound timer
-	uint8_t  key; // key being held down
+	bool     keys[NUM_OF_KEYS]; // key being held down
 	uint8_t  display[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 } chip8;
 
@@ -38,7 +38,11 @@ void sys_init(chip8* sys);
 void sys_load_rom(chip8* s, const char* romPath);
 void sys_pctr_increment(chip8* sys);
 void sys_cycle(chip8* s);
-void sys_setkeydown(chip8* s, uint8_t key);
+void sys_setkeydown(chip8* s, uint8_t key, bool isDown);
+
+// Misc
+void sys_SetDisplayTheme(chip8* s, uint8_t on_color[3], uint8_t off_color[3]);
+
 
 #endif // _CHIP8_SYSTEM_H_INCLUDED
 

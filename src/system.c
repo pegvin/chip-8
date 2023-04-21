@@ -31,10 +31,10 @@ void sys_init(chip8* sys) {
 	memset(sys->registers, 0, NUM_OF_REGISTERS * sizeof(sys->registers[0]));
 	memset(sys->stack, 0, STACK_SIZE * sizeof(sys->stack[0]));
 	memset(sys->display, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
+	memset(sys->keys, 0, NUM_OF_KEYS * sizeof(bool));
 	sys->pctr = ROM_START;
 	sys->opcode = 0;
 	sys->I = 0;
-	sys->key = 0;
 	sys->sptr = 0;
 	sys->dt = 0;
 	sys->st = 0;
@@ -64,8 +64,8 @@ void sys_pctr_increment(chip8* sys) {
 	sys->pctr += 2; // since every opcode is 2 bytes while we have ability to access 1 byte.
 }
 
-void sys_setkeydown(chip8* s, uint8_t key) {
-	s->key = key;
+void sys_setkeydown(chip8* s, uint8_t key, bool isDown) {
+	s->keys[key] = isDown;
 }
 
 void sys_printstate(chip8* s) {
@@ -75,7 +75,9 @@ void sys_printstate(chip8* s) {
 	printf("Stack Pointer: 0x%X\n", s->sptr);
 	printf("Delay Timer: %d\n", s->dt);
 	printf("Sound Timer: %d\n", s->st);
-	printf("Key: 0x%X\n", s->key);
+
+	printf("Keys:\n");
+	for (uint8_t key = 0; key < NUM_OF_REGISTERS; ++key) printf("  Key %X: 0x%X\n", key, s->keys[key]);
 
 	printf("Registers:\n");
 	for (uint8_t vx = 0; vx < NUM_OF_REGISTERS; ++vx) printf("  V%X: 0x%X\n", vx, s->registers[vx]);
@@ -95,7 +97,7 @@ void sys_cycle(chip8* s) {
 	switch (identifier) {
 		case 0x0: {
 			if (s->opcode == 0x00E0) { // Clear: Clear The Display
-				memset(s->display, 0, 64 * 32);
+				memset(s->display, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
 			} else if (s->opcode == 0x00EE) { // Return from a subroutine: The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
 				if (s->sptr > 0) s->sptr--;
 				s->pctr = s->stack[s->sptr];
@@ -159,25 +161,32 @@ void sys_cycle(chip8* s) {
 				s->registers[Vx] = s->registers[Vy];
 			} else if (code == 0x1) { // Set Vx = Vx OR Vy.
 				s->registers[Vx] |= s->registers[Vy];
+				s->registers[0xF] = 0;
 			} else if (code == 0x2) { // Set Vx = Vx AND Vy.
 				s->registers[Vx] &= s->registers[Vy];
+				s->registers[0xF] = 0;
 			} else if (code == 0x3) { // Set Vx = Vx XOR Vy.
 				s->registers[Vx] ^= s->registers[Vy];
+				s->registers[0xF] = 0;
 			} else if (code == 0x4) { // Set Vx = Vx + Vy, set VF = carry.
-				s->registers[0xF] = (s->registers[Vx] + s->registers[Vy]) > 255;
-				s->registers[Vx] += s->registers[Vy];
+				uint16_t sum = s->registers[Vx] + s->registers[Vy];
+				s->registers[Vx] = sum & 0x00FF;
+				s->registers[0xF] = (sum > 255);
 			} else if (code == 0x5) { // Set Vx = Vx - Vy, set VF = NOT borrow.
-				s->registers[0xF] = (s->registers[Vx] > s->registers[Vy]);
+				bool isVxGreater = (s->registers[Vx] > s->registers[Vy]);
 				s->registers[Vx] -= s->registers[Vy];
+				s->registers[0xF] = isVxGreater;
 			} else if (code == 0x6) { // Set Vx = Vx SHR 1.
-				s->registers[0xF] = s->registers[Vx] & 0x1;
+				bool isVxLsbSet = s->registers[Vx] & 0x1;
 				s->registers[Vx] >>= 1;
+				s->registers[0xF] = isVxLsbSet;
 			} else if (code == 0x7) { // Set Vx = Vy - Vx, set VF = NOT borrow.
-				s->registers[0xF] = (s->registers[Vy] > s->registers[Vx]);
 				s->registers[Vx] = s->registers[Vy] - s->registers[Vx];
+				s->registers[0xF] = (s->registers[Vy] > s->registers[Vx]);
 			} else if (code == 0xE) { // Set Vx = Vx SHL 1.
-				s->registers[0xF] = (s->registers[Vx] & 0x80) >> 7;
+				bool isVxMsbSet = (s->registers[Vx] & 0x80) >> 7;
 				s->registers[Vx] <<= 1;
+				s->registers[0xF] = isVxMsbSet;
 			} else {
 				LOG_E("Un-reachable Section reached!");
 				sys_printstate(s);
@@ -216,8 +225,8 @@ void sys_cycle(chip8* s) {
 			uint8_t Vy = (s->opcode & 0x00F0) >> 4;
 			uint8_t height = s->opcode & 0x000F; // this is the height of our sprite.
 
-			uint8_t xPos = s->registers[Vx] % (DISPLAY_WIDTH + 1); // wraps around our sum, so 64 + 2 = 66 but since we only have a screen size of 64, 66 % 64 = 2.
-			uint8_t yPos = s->registers[Vy] % (DISPLAY_HEIGHT + 1); // same wrapping as above
+			uint8_t xPos = s->registers[Vx] % DISPLAY_WIDTH; // wraps around our sum, so 64 + 2 = 66 but since we only have a screen size of 64, 66 % 64 = 2.
+			uint8_t yPos = s->registers[Vy] % DISPLAY_HEIGHT; // same wrapping as above
 
 			s->registers[0xF] = 0;
 
@@ -233,9 +242,12 @@ void sys_cycle(chip8* s) {
 					if (isPixelOn) {
 						uint16_t pX = xPos + x;
 						uint16_t pY = yPos + y;
+						if (pX < 0 || pY < 0 || pX > DISPLAY_WIDTH - 1 || pY > DISPLAY_HEIGHT - 1) break;
 						uint32_t idx = pY * DISPLAY_WIDTH + pX;
 
-						if (s->display[idx] == 1) s->registers[0xF] = 1;
+						if (s->display[idx] == 1) {
+							s->registers[0xF] = 1;
+						}
 						s->display[idx] ^= 1;
 					}
 				}
@@ -246,11 +258,11 @@ void sys_cycle(chip8* s) {
 			uint8_t code = (s->opcode & 0x00FF);
 			uint8_t Vx = (s->opcode & 0x0F00) >> 8;
 			if (code == 0x9E) { // Skip next instruction if key with the value of Vx is pressed.
-				if (s->key == s->registers[Vx]) {
+				if (s->keys[s->registers[Vx]]) {
 					sys_pctr_increment(s);
 				}
 			} else if (code == 0xA1) { // Skip next instruction if key with the value of Vx is not pressed.
-				if (s->key != s->registers[Vx]) {
+				if (!s->keys[s->registers[Vx]]) {
 					sys_pctr_increment(s);
 				}
 			} else {
@@ -266,11 +278,14 @@ void sys_cycle(chip8* s) {
 			if (code == 0x07) { // Set Vx = delay timer value.
 				s->registers[Vx] = s->dt;
 			} else if (code == 0x0A) { // Wait for a key press, store the value of the key in Vx.
-				if (s->key == 0x0) {
-					return; // return-ing out of the function is important else pctr will be incremented and CPU will run the next instruction.
-				} else {
-					s->registers[Vx] = s->key;
+				bool foundAKey = false;
+				for (uint8_t i = 0; i < NUM_OF_KEYS; ++i) {
+					if (s->keys[i]) {
+						s->registers[Vx] = i;
+						foundAKey = true;
+					}
 				}
+				if (!foundAKey) s->pctr -= 2;
 			} else if (code == 0x15) { // Set delay timer = Vx.
 				s->dt = s->registers[Vx];
 			} else if (code == 0x18) { // Set sound timer = Vx.

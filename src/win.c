@@ -4,8 +4,8 @@
 static SDL_Window* window = NULL;
 
 static SDL_Surface* emuDisplaySurf = NULL;
-static uint8_t ON_Color[3] = { 0, 0, 255 };
-static uint8_t OFF_Color[3] = { 255, 0, 0 };
+static uint8_t  pixelOn[3]; // Pixel ON Color
+static uint8_t  pixelOff[3]; // Pixel OFF Color
 
 int InitWindow() {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
@@ -45,48 +45,24 @@ void CloseWindow() {
 	SDL_Quit();
 }
 
-void UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT], SDL_Rect* _dirtyArea) {
-	SDL_Rect dirtyArea = { 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT };
-	if (_dirtyArea != NULL) {
-		dirtyArea.x = _dirtyArea->x;
-		dirtyArea.y = _dirtyArea->y;
-		dirtyArea.w = _dirtyArea->w;
-		dirtyArea.h = _dirtyArea->h;
-	}
-	SDL_Rect dirtyAreaScaled = {
-		dirtyArea.x * EMU_DISPLAY_SCALE,
-		dirtyArea.y * EMU_DISPLAY_SCALE,
-		dirtyArea.w * EMU_DISPLAY_SCALE,
-		dirtyArea.h * EMU_DISPLAY_SCALE
-	};
-
+void UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT * 3]) {
 	SDL_LockSurface(emuDisplaySurf);
-	for (uint16_t y = dirtyArea.y; y < dirtyArea.h; ++y) {
-		for (uint16_t x = dirtyArea.x; x < dirtyArea.w; ++x) {
+	for (uint16_t y = 0; y < DISPLAY_HEIGHT; ++y) {
+		for (uint16_t x = 0; x < DISPLAY_WIDTH; ++x) {
 			memcpy(
-				emuDisplaySurf->pixels + ((y * DISPLAY_WIDTH + x) * 3),
-				pixels[y * DISPLAY_WIDTH + x] != 0 ? ON_Color : OFF_Color,
+				emuDisplaySurf->pixels + (((y * DISPLAY_WIDTH) + x) * 3),
+				pixels[(y * DISPLAY_WIDTH) + x] ? pixelOn : pixelOff,
 				3
 			);
 		}
 	}
 	SDL_UnlockSurface(emuDisplaySurf);
-
-	SDL_BlitScaled(
-		emuDisplaySurf,
-		&dirtyArea,
-		SDL_GetWindowSurface(window),
-		&dirtyAreaScaled
-	);
+	SDL_BlitScaled(emuDisplaySurf, NULL, SDL_GetWindowSurface(window), NULL);
 	SDL_UpdateWindowSurface(window);
 }
 
 void SetDisplayTheme(uint8_t on_color[3], uint8_t off_color[3]) {
-	if (on_color != NULL) {
-		memcpy(ON_Color, on_color, 3);
-	}
-	if (off_color != NULL) {
-		memcpy(OFF_Color, off_color, 3);
-	}
+	if (on_color != NULL) memcpy(pixelOn, on_color, 3);
+	if (off_color != NULL) memcpy(pixelOff, off_color, 3);
 }
 
