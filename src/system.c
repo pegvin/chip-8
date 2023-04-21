@@ -164,9 +164,8 @@ void sys_cycle(chip8* s) {
 			} else if (code == 0x3) { // Set Vx = Vx XOR Vy.
 				s->registers[Vx] ^= s->registers[Vy];
 			} else if (code == 0x4) { // Set Vx = Vx + Vy, set VF = carry.
-				uint16_t sum = s->registers[Vx] + s->registers[Vy];
-				s->registers[0xF] = sum > 255;
-				s->registers[Vx] += sum & 0xFF;
+				s->registers[0xF] = (s->registers[Vx] + s->registers[Vy]) > 255;
+				s->registers[Vx] += s->registers[Vy];
 			} else if (code == 0x5) { // Set Vx = Vx - Vy, set VF = NOT borrow.
 				s->registers[0xF] = (s->registers[Vx] > s->registers[Vy]);
 				s->registers[Vx] -= s->registers[Vy];
@@ -281,7 +280,7 @@ void sys_cycle(chip8* s) {
 			} else if (code == 0x29) { // Set I = location of sprite for digit Vx.
 				s->I = FONTSET_ADDR + (s->registers[Vx] * 5); // since each sprite consists of 5 bytes.
 			} else if (code == 0x33) { // Store BCD representation of Vx in memory locations I, I+1, and I+2.
-				s->ram[s->I + 0] = s->registers[Vx] / 10;
+				s->ram[s->I + 0] = s->registers[Vx] / 100;
 				s->ram[s->I + 1] = (s->registers[Vx] / 10) % 10;
 				s->ram[s->I + 2] = s->registers[Vx] % 10;
 			} else if (code == 0x55) { // Store registers V0 through Vx in memory starting at location I.
