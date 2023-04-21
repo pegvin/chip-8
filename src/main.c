@@ -26,7 +26,12 @@ int main(int argc, char** argv) {
 
 	UpdateWindowPixels(sys.display, NULL);
 
+	unsigned int clockStart, clockEnd;
+	unsigned int clockFreq = 1000 / 700; // 700 MHz
+
 	while (isRunning) {
+		clockStart = SDL_GetTicks();
+
 		sys_cycle(&sys);
 
 		SDL_Event e;
@@ -65,7 +70,10 @@ int main(int argc, char** argv) {
 		}
 
 		UpdateWindowPixels(sys.display, NULL);
-		SDL_Delay(1000/500);
+
+		clockEnd = SDL_GetTicks() - clockStart;
+		if (clockFreq > clockEnd) SDL_Delay(clockFreq - clockEnd);
+		clockStart = SDL_GetTicks();
 	}
 
 	CloseWindow();
