@@ -21,9 +21,7 @@ int main(int argc, char** argv) {
 	if (InitWindow() != 0) return 1;
 
 	chip8 sys;
-
-	// 1-bit palette: lospec.com/palette-list/1bit-monitor-glow
-	uint8_t on_color[3] = { 0xf0, 0xf6, 0xf0 };
+	uint8_t on_color[3] = { 0xb8, 0xc2, 0xb9 };
 	uint8_t off_color[3] = { 0x22, 0x23, 0x23 };
 	sys_init(&sys, on_color, off_color);
 	sys_load_rom(&sys, argv[1]);
