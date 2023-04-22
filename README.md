@@ -12,11 +12,11 @@ chip-8 is kinda like a "specification" which decribes how a chip-8 machine shoul
 i tried to make the emulator as accurate as possible and for that i used [chip-8 test suite](https://github.com/Timendus/chip8-test-suite), which provides many roms to test various things like opcodes, flags etc.
 
 <p float="left" align="center">
-  <img src="https://user-images.githubusercontent.com/75035219/233769394-e036580c-a842-4417-b6ba-6bbe3cd92f40.png" width="400" />
-  <img src="https://user-images.githubusercontent.com/75035219/233769411-1da884ee-434c-488b-997a-6535927f5ccf.png" width="400" />
-  <img src="https://user-images.githubusercontent.com/75035219/233769419-b9617671-7d4a-4b0f-959c-689eadbb0d27.png" width="400" />
-  <img src="https://user-images.githubusercontent.com/75035219/233769511-e8bb6aa2-314e-4200-8bdd-edc90ebd62e3.png" width="400" />
-  <img src="https://user-images.githubusercontent.com/75035219/233769540-ba5c4923-eb6e-4513-b019-d4fa93ef0c70.png" width="400" />
+  <img src="https://user-images.githubusercontent.com/75035219/233769853-2b4fee82-a1ff-422f-96bf-c78a2d0d8e80.png" width="400" />&nbsp;
+  <img src="https://user-images.githubusercontent.com/75035219/233769888-d29a0f03-8f79-4fd4-8d25-e34153e1d1b5.png" width="400" />&nbsp;
+  <img src="https://user-images.githubusercontent.com/75035219/233769913-90a6c59d-c321-4f37-819a-f5d57dd2e7d0.png" width="400" />&nbsp;
+  <img src="https://user-images.githubusercontent.com/75035219/233769945-19d48233-a0aa-4b9d-8ec3-7505128d2402.png" width="400" />&nbsp;
+  <img src="https://user-images.githubusercontent.com/75035219/233769966-8f748245-fd1f-4c3e-a071-dae4b1b0b5ab.png" width="400" />
 </p>
 
 ---
