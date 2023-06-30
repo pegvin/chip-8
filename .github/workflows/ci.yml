@@ -15,7 +15,7 @@ jobs:
     - name: Install x11 Devel Files
       run: |
         sudo apt-get update
-        sudo apt-get install libx11-dev
+        sudo apt-get install xorg xserver-xorg-core xserver-xorg libx11-dev
 
     - name: Build & Strip
       run: |
