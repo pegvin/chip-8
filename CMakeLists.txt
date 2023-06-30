@@ -19,9 +19,13 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.cmake)
 
 add_executable(chip8 ${SRC_FILES})
 
-if (NOT APPLE OR NOT WINDOWS)
+if (NOT APPLE AND NOT WINDOWS)
     target_link_libraries(chip8 m)
 endif()
+
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR})
+target_link_libraries(chip8 ${OPENGL_LIBRARIES})
 
 target_include_directories(chip8 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 target_include_directories(chip8 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/gunslinger/)
