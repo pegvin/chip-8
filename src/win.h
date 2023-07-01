@@ -1,7 +1,7 @@
 #ifndef _CHIP8_WINDOW_H_INCLUDED
 #define _CHIP8_WINDOW_H_INCLUDED 1
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <stdint.h>
 
 #include "system.h"

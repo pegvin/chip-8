@@ -14,7 +14,15 @@ file(
 	${CMAKE_CURRENT_SOURCE_DIR}/src/win.c
 )
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.cmake)
+# Debug C/C++ flags
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+	add_compile_options(-fsanitize=address)
+	add_link_options(-fsanitize=address)
+	add_definitions(-D_DEBUG)
+else()
+	add_definitions(-D_NDEBUG)
+endif()
+
 add_executable(chip8 ${SRC_FILES})
 target_include_directories(chip8 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
@@ -37,3 +45,5 @@ elseif(TARGET SDL2::SDL2)
 else()
 	message(FATAL_ERROR "neither static nor dynamic library of SDL2 found!")
 endif()
+
+target_include_directories(chip8 PUBLIC ${SDL_INCLUDE_DIRS})
