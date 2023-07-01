@@ -21,10 +21,10 @@ find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 
 # Prefer Linking With SDL2 Statically But If Not Available, Link Dynamically.
 if(TARGET SDL2::SDL2-static)
-	target_link_libraries(chip8 PRIVATE SDL2::SDL2-static)
+	target_link_libraries(chip8 PUBLIC SDL2::SDL2-static)
 	message(STATUS "Linking With SDL2 Statically.")
 elseif(TARGET SDL2::SDL2)
-	target_link_libraries(chip8 PRIVATE SDL2::SDL2)
+	target_link_libraries(chip8 PUBLIC SDL2::SDL2)
 	# When Linking Dynamically, Make Sure To Copy .dll Files
 	if(WIN32)
 		add_custom_command(TARGET csprite POST_BUILD
