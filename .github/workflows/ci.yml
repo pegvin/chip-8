@@ -19,11 +19,12 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt-get update && sudo apt-get install cmake
 
-    - name: Install CMake (MacOS)
+    - name: Install CMake & SDL2 (MacOS)
       if: ${{ matrix.os == 'macos-latest' }}
-      run: brew install cmake
+      run: brew install cmake sdl2
 
     - name: Get SDL2
+      if: ${{ matrix.os != 'macos-latest' }}
       run: git clone https://github.com/libsdl-org/SDL -b release-2.26.2
 
     - name: Generate Build Files (SDL2 Windows)
@@ -39,6 +40,7 @@ jobs:
         cmake -L -S . -B build/ -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSDL2_DISABLE_SDL2MAIN=OFF -DSDL_VIDEO=ON -DSDL_RENDER=ON -DSDL_DIRECTX=OFF -DSDL_RENDER_D3D=OFF -DSDL_VULKAN=ON -DSDL_XINPUT=OFF -DSDL_EVENTS=ON -DSDL_LOADSO=ON -DSDL_THREADS=ON -DSDL_TIMERS=ON -DSDL_ATOMIC=OFF -DSDL_AUDIO=OFF -DSDL_JOYSTICK=OFF -DSDL_HAPTIC=OFF -DSDL_HIDAPI=OFF -DSDL_POWER=OFF -DSDL_FILE=OFF -DSDL_CPUINFO=OFF -DSDL_FILESYSTEM=OFF -DSDL_SENSOR=OFF -DSDL_LOCALE=OFF -DSDL_MISC=OFF -DSDL_DISKAUDIO=OFF -DSDL_DUMMYAUDIO=OFF -DSDL_DUMMYVIDEO=OFF -DSDL_HIDAPI=OFF -DSDL_HIDAPI_JOYSTICK=OFF -DSDL_VIRTUAL_JOYSTICK=OFF -DSDL_WASAPI=OFF
 
     - name: Build (SDL2)
+      if: ${{ matrix.os != 'macos-latest' }}
       run: |
         cd SDL/
         cmake --build build/ --config Release --parallel 4
@@ -47,8 +49,8 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: cd SDL && sudo cmake --install build/ --config Release
 
-    - name: Install SDL2 (Non-Linux)
-      if: ${{ matrix.os != 'ubuntu-latest' }}
+    - name: Install SDL2 (Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
       run: cd SDL && cmake --install build/ --config Release
 
     - name: Generate Build Files (Windows)
