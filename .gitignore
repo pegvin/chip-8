@@ -51,7 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-chip-8
-chip-8.exe
 .cache
-compile_commands.json
+build
+
