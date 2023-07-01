@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	if (InitWindow() != 0) return 1;
+	if (Win_InitWindow() != 0) return 1;
 
 	chip8 sys;
 	uint8_t on_color[3] = { 0xb8, 0xc2, 0xb9 };
@@ -79,14 +79,14 @@ int main(int argc, char** argv) {
 		}
 
 		sys_cycle(&sys);
-		UpdateWindowPixels(sys.displayRGB);
+		Win_UpdateWindowPixels(sys.displayRGB);
 
 		clockEnd = SDL_GetTicks() - clockStart;
 		if (clockFreq > clockEnd) SDL_Delay(clockFreq - clockEnd);
 		clockStart = SDL_GetTicks();
 	}
 
-	CloseWindow();
+	Win_CloseWindow();
 	return 0;
 }
 

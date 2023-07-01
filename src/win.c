@@ -4,7 +4,7 @@
 static SDL_Window* window = NULL;
 static SDL_Surface* emuDisplaySurf = NULL;
 
-int InitWindow() {
+int Win_InitWindow() {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
 		LOG_E("failed to initialize SDL2: %s", SDL_GetError());
 		return 1;
@@ -36,7 +36,7 @@ int InitWindow() {
 	return 0;
 }
 
-void CloseWindow() {
+void Win_CloseWindow() {
 	if (emuDisplaySurf) SDL_FreeSurface(emuDisplaySurf);
 	if (window) SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -45,7 +45,7 @@ void CloseWindow() {
 	window = NULL;
 }
 
-void UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT * 3]) {
+void Win_UpdateWindowPixels(uint8_t pixels[DISPLAY_WIDTH * DISPLAY_HEIGHT * 3]) {
 	SDL_LockSurface(emuDisplaySurf);
 	SDL_memcpy(emuDisplaySurf->pixels, pixels, DISPLAY_WIDTH * DISPLAY_HEIGHT * 3);
 	SDL_UnlockSurface(emuDisplaySurf);
