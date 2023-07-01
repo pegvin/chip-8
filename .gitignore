@@ -1,56 +1,29 @@
-# Prerequisites
-*.d
-
-# Object files
 *.o
-*.ko
-*.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
+*.d
+*.rc
+./*.ini
 *.exe
+*.swp
 *.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+*.inl
+*.log
+*~
+*.obj
+csprite
+font2inl
+image2inl
+.sconsign.dblite
+.sconf_temp
+imgui.ini
+config.log
+.DS_Store
+xcuserdata/
+todo
+.vimrc
+.SRCINFO
+data/icons/
+data/icon.ico
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-chip-8
-chip-8.exe
-
+build/
+.cache/
+src/gui/
