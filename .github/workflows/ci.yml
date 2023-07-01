@@ -5,157 +5,60 @@ on:
   pull_request:
 
 jobs:
-  linux-x86_64:
-    runs-on: ubuntu-latest
+  build:
     strategy:
       matrix:
-        config:
-        - { name: "GCC", cc: gcc }
-        - { name: "Clang", cc: clang }
-    steps:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - name: Build & Install SDL2
-      run: bash ./tools/BuildNInstall_Linux.sh
+    - name: Install CMake (Linux)
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: sudo apt-get update && sudo apt-get install cmake
 
-    - name: Build & Strip (Static Linking=False;)
+    - name: Install CMake (MacOS)
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: brew install cmake
+
+    - name: Get SDL2
+      run: git clone https://github.com/libsdl-org/SDL -b release-2.26.2
+
+    - name: Generate Build Files (SDL2 Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
       run: |
-        make all -j4 BUILD_TARGET=release CC=${{ matrix.config.cc }}
-        strip ./chip-8
+        cd SDL/
+        cmake -L -S . -B build/ -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DSDL2_DISABLE_SDL2MAIN=OFF -DSDL_VIDEO=ON -DSDL_RENDER=ON -DSDL_DIRECTX=ON -DSDL_RENDER_D3D=ON -DSDL_VULKAN=ON -DSDL_XINPUT=ON -DSDL_EVENTS=ON -DSDL_LOADSO=ON -DSDL_THREADS=ON -DSDL_TIMERS=ON -DSDL_ATOMIC=OFF -DSDL_AUDIO=OFF -DSDL_JOYSTICK=OFF -DSDL_HAPTIC=OFF -DSDL_HIDAPI=OFF -DSDL_POWER=OFF -DSDL_FILE=OFF -DSDL_CPUINFO=OFF -DSDL_FILESYSTEM=OFF -DSDL_SENSOR=OFF -DSDL_LOCALE=OFF -DSDL_MISC=OFF -DSDL_DISKAUDIO=OFF -DSDL_DUMMYAUDIO=OFF -DSDL_DUMMYVIDEO=OFF -DSDL_HIDAPI=OFF -DSDL_HIDAPI_JOYSTICK=OFF -DSDL_VIRTUAL_JOYSTICK=OFF -DSDL_WASAPI=OFF
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      if: ${{ matrix.config.cc == 'clang' }}
-      with:
-        name: linux-x86_64-${{ matrix.config.cc }}
-        path: ./chip-8
-        if-no-files-found: error
-
-  linux-i686:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Build (Setup Ubuntu 18.04 x86) (Build & Install SDL2) (Compiler = Clang;)
-      uses: paulproteus/ubuntu-18.04-x86@0.1
-      with:
-        command: |
-          echo "::group::Update System Repositories & Install pkg-config, git, libgtk-3-dev, clang-10"
-          apt-get update -y
-          apt-get install -y pkg-config git libgtk-3-dev zlib1g zlib1g-dev clang-10
-          echo "::endgroup::"
-          echo "::group::Build & Install SDL2"
-          bash ./tools/BuildNInstall_Linux.sh
-          echo "::endgroup::"
-          echo "::group::Build Csprite"
-          make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=1 CC=clang-10
-          echo "::endgroup::"
-
-    - name: Exit if file not exists
+    - name: Generate Build Files (SDL2 Non-Windows)
+      if: ${{ matrix.os != 'windows-latest' }}
       run: |
-        if [ ! -e ./chip-8 ]; then
-            echo "'chip-8' executable not found"
-            exit 1
-        fi
+        cd SDL/
+        cmake -L -S . -B build/ -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSDL2_DISABLE_SDL2MAIN=OFF -DSDL_VIDEO=ON -DSDL_RENDER=ON -DSDL_DIRECTX=OFF -DSDL_RENDER_D3D=OFF -DSDL_VULKAN=ON -DSDL_XINPUT=OFF -DSDL_EVENTS=ON -DSDL_LOADSO=ON -DSDL_THREADS=ON -DSDL_TIMERS=ON -DSDL_ATOMIC=OFF -DSDL_AUDIO=OFF -DSDL_JOYSTICK=OFF -DSDL_HAPTIC=OFF -DSDL_HIDAPI=OFF -DSDL_POWER=OFF -DSDL_FILE=OFF -DSDL_CPUINFO=OFF -DSDL_FILESYSTEM=OFF -DSDL_SENSOR=OFF -DSDL_LOCALE=OFF -DSDL_MISC=OFF -DSDL_DISKAUDIO=OFF -DSDL_DUMMYAUDIO=OFF -DSDL_DUMMYVIDEO=OFF -DSDL_HIDAPI=OFF -DSDL_HIDAPI_JOYSTICK=OFF -DSDL_VIRTUAL_JOYSTICK=OFF -DSDL_WASAPI=OFF
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: linux-i686-clang10
-        path: ./chip-8
-        if-no-files-found: error
+    - name: Build & Install (SDL2)
+        cd SDL/
+        cmake --build build/ --config Release --parallel 4
+        cmake --install build/ --config Release
 
-  windows-x86_64:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: mingw64
-          update: false
-          install: |
-            make git
-            mingw-w64-x86_64-binutils mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
-
-      - name: Build & Install SDL2
-        run: |
-          export CC=gcc
-          export CXX=g++
-          bash ./tools/BuildNInstall_Windows.sh mingw64
-
-      - name: Build
-        run: make all -j4 BUILD_TARGET=release CC=gcc
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: win-x86_64
-          path: chip-8.exe
-          if-no-files-found: error
-
-  windows-i686:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: mingw32
-          update: false
-          install: |
-            make git
-            mingw-w64-i686-binutils mingw-w64-i686-gcc mingw-w64-i686-cmake
-
-      - name: Build & Install SDL2
-        run: |
-          export CC=gcc
-          export CXX=g++
-          bash ./tools/BuildNInstall_Windows.sh mingw32
-
-      - name: Build
-        run: make all -j4 BUILD_TARGET=release CC=gcc
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: win-i686
-          path: chip-8.exe
-          if-no-files-found: error
-
-  osx_x86_64:
-    runs-on: macos-11
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Install dylibbundler, SDL2
+    - name: Generate Build Files (Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
       run: |
-        brew install dylibbundler sdl2
+        cmake -S . -B build/ -G "Visual Studio 17 2022" -T "ClangCL" -DCMAKE_BUILD_TYPE=Release
+
+    - name: Generate Build Files (Non-Windows)
+      if: ${{ matrix.os != 'windows-latest' }}
+      run: |
+        cmake -S . -B build/ -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
-      run: make all -j4 BUILD_TARGET=release
+      run: |
+        cmake --build build/ --config Release --parallel 4
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: osx_executable
-        path: ./chip-8
+        name: ${{ matrix.os }}
+        path: ./build/
         if-no-files-found: error
-
-
